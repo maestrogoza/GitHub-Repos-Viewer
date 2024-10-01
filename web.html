@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repos Fetcher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="text-center">Buscar Repositorios de GitHub</h1>
+
+    <form id="userForm" class="mt-4">
+        <div class="mb-3">
+            <label for="username" class="form-label">Nombre de usuario en GitHub:</label>
+            <input type="text" class="form-control" id="username" placeholder="Ingresa el nombre de usuario" required>
+        </div>
+        <button type="submit" class="btn btn-success">Buscar</button>
+    </form>
+
+    <table class="table table-striped mt-4" id="reposTable" style="display:none;">
+        <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Nº estrellas</th>
+        </tr>
+        </thead>
+        <tbody id="repoTableBody">
+        </tbody>
+    </table>
+
+    <div class="alert alert-danger mt-4" id="errorMessage" style="display:none;">
+        No se pudieron cargar los repositorios. Verifica el nombre de usuario.
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#userForm').submit(function (e) {
+            // Evita que se recargue la página.
+            e.preventDefault();
+
+            // Se obtiene el valor del textbox.
+            const username = $('#username').val().trim();
+            if (username) {
+                const apiUrl = `https://api.github.com/users/${username}/repos`;
+
+                // Se vacian los datos anteriores para que no se acumulen con los nuevos.
+                $('#repoTableBody').empty();
+                $('#reposTable').hide();
+                $('#errorMessage').hide();
+
+                // Se hace una solicitud .get a la URL apiUrl para obtener los datos de los repositorios del usuario.
+                $.get(apiUrl, function (repos) {
+                    if (repos.length === 0) {
+                        $('#errorMessage').text('No se encontraron repositorios para este usuario.').show();
+                        return;
+                    }
+
+                    // Se muestra información del repositorio en la tabla
+                    repos.forEach(repo => {
+                        const row = `<tr>
+                            <td><a href="${repo.html_url}" target="_blank">${repo.name}</a></td>
+                            <td>${repo.description || 'Sin descripción'}</td>
+                            <td>${repo.stargazers_count}</td>
+                        </tr>`;
+                        $('#repoTableBody').append(row);
+                    });
+
+                    $('#reposTable').show();
+                }).fail(function () {
+                    $('#errorMessage').text('No se pudieron cargar los repositorios. Verifica el nombre de usuario.').show();
+                });
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
